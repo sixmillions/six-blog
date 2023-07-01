@@ -23,6 +23,8 @@ public enum ResultCode implements IResultCode {
      */
     UN_AUTHORIZED(401, "请求未授权"),
 
+    CLIENT_UN_AUTHORIZED(401, "客户端请求未授权"),
+
     /**
      * 404 没找到请求
      */
@@ -52,6 +54,10 @@ public enum ResultCode implements IResultCode {
      * 服务器异常
      */
     INTERNAL_SERVER_ERROR(500, "服务器异常"),
+
+    PARAM_MISS(400, "缺少必要的请求参数"),
+    PARAM_TYPE_ERROR(400, "请求参数类型错误"),
+    PARAM_BIND_ERROR(400, "请求参数绑定错误"),
 
     /**
      * 参数校验失败
