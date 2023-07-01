@@ -304,6 +304,17 @@ public class R<T> implements Serializable {
      * @return 统一封装的返回结果
      */
     public static <T> R<T> status(boolean flag) {
-        return flag ? success("") : fail("操作失败");
+        return flag ? success("操作成功") : fail("操作失败");
+    }
+
+    /**
+     * 返回成功R或者失败R
+     *
+     * @param flag 布尔
+     * @param <T>  返回结果泛型
+     * @return 统一封装的返回结果
+     */
+    public static <T> R<T> status(boolean flag, String message) {
+        return flag ? success(message) : fail(message);
     }
 }
