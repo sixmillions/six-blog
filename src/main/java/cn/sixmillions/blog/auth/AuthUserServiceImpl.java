@@ -1,5 +1,6 @@
 package cn.sixmillions.blog.auth;
 
+import cn.hutool.core.lang.Validator;
 import cn.sixmillions.blog.entity.User;
 import cn.sixmillions.blog.service.IUserService;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -26,8 +27,15 @@ public class AuthUserServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User one = userService.getOne(Wrappers.<User>lambdaQuery().eq(User::getName, username));
-        return Optional.ofNullable(one).map(AuthUser::new).orElseThrow(() -> new UsernameNotFoundException("用户名密码不正确"));
+        User user;
+        if (Validator.isEmail(username)) {
+            user = userService.getOne(Wrappers.<User>lambdaQuery().eq(User::getEmail, username));
+        } else if (Validator.isMobile(username)) {
+            user = userService.getOne(Wrappers.<User>lambdaQuery().eq(User::getPhoneNumber, username));
+        } else {
+            user = userService.getOne(Wrappers.<User>lambdaQuery().eq(User::getName, username));
+        }
+        return Optional.ofNullable(user).map(AuthUser::new).orElseThrow(() -> new UsernameNotFoundException("用户名密码不正确"));
     }
 
 }

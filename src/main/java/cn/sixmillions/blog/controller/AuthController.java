@@ -15,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,6 +43,8 @@ public class AuthController {
 
     private final JwtUtil jwtUtil;
 
+    private final PasswordEncoder passwordEncoder;
+
     @PostMapping("/login")
     public R<AuthRes> authByPassword(@RequestBody AuthUser auth) {
         // 认证
@@ -61,6 +64,9 @@ public class AuthController {
      */
     @PostMapping("/signup")
     public R<Object> signup(@RequestBody @Valid SignUpUser user) {
+        // 密码加密
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // TODO 检验phoneNumber的唯一性
         boolean save = userService.save(userConverter.toUser(user));
         return R.status(save);
     }

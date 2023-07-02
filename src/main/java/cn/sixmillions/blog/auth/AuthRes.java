@@ -17,6 +17,7 @@ public class AuthRes {
 
     /**
      * 账号
+     * 用户名，邮箱，手机号
      */
     private String code;
 
