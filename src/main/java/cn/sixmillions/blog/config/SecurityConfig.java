@@ -1,5 +1,6 @@
 package cn.sixmillions.blog.config;
 
+import cn.sixmillions.blog.auth.DelegatedAuthenticationEntryPoint;
 import cn.sixmillions.blog.auth.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +33,8 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
 
+    private final DelegatedAuthenticationEntryPoint delegatedAuthenticationEntryPoint;
+
     /**
      * 忽略路径
      *
@@ -53,7 +56,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> req.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll())
                 .authorizeHttpRequests(req -> req.anyRequest().authenticated())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(delegatedAuthenticationEntryPoint));
         return http.build();
     }
 
