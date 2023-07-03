@@ -1,10 +1,17 @@
 package cn.sixmillions.blog.auth;
 
+import cn.sixmillions.blog.base.api.R;
+import cn.sixmillions.blog.base.api.ResultCode;
+import cn.sixmillions.blog.base.api.SecurityError;
 import cn.sixmillions.blog.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +20,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,6 +31,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,10 +59,30 @@ public class JwtFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         var token = getToken(request);
-        var claims = jwtUtil.parseClims(token);
-        // 没有异常，则认证通过
-        SecurityContextHolder.getContext().setAuthentication(createAuthentication(claims));
+        try {
+            var claims = jwtUtil.parseClims(token);
+            // 没有异常，则认证通过
+            SecurityContextHolder.getContext().setAuthentication(createAuthentication(claims));
+        } catch (ExpiredJwtException e) {
+            log.warn("Token过期");
+            returnJson(response);
+            SecurityContextHolder.clearContext();
+        } catch (UnsupportedJwtException | MalformedJwtException | SignatureException | IllegalArgumentException e) {
+            log.warn("Token无效");
+            returnJson(response);
+            SecurityContextHolder.clearContext();
+        }
         filterChain.doFilter(request, response);
+    }
+
+    private void returnJson(HttpServletResponse response) throws IOException {
+        response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(HttpStatus.OK.value());
+        R<Object> res = R.fail(ResultCode.UN_AUTHORIZED, SecurityError.INVALID_TOKEN.getErrorCode(), SecurityError.INVALID_TOKEN.getMessage());
+        PrintWriter writer = response.getWriter();
+        writer.println(objectMapper.writeValueAsString(res));
+        writer.close();
     }
 
     @Override

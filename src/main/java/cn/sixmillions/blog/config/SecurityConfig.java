@@ -1,7 +1,7 @@
 package cn.sixmillions.blog.config;
 
-import cn.sixmillions.blog.auth.DelegatedAuthenticationEntryPoint;
 import cn.sixmillions.blog.auth.JwtFilter;
+import cn.sixmillions.blog.auth.SecurityExceptionSupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +9,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -28,12 +29,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
 
-    private final DelegatedAuthenticationEntryPoint delegatedAuthenticationEntryPoint;
+    private final SecurityExceptionSupport securityExceptionSupport;
 
     /**
      * 忽略路径
@@ -57,7 +59,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req -> req.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll())
                 .authorizeHttpRequests(req -> req.anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(delegatedAuthenticationEntryPoint));
+                .exceptionHandling(ex ->
+                        ex.authenticationEntryPoint(securityExceptionSupport)
+                                .accessDeniedHandler(securityExceptionSupport));
         return http.build();
     }
 

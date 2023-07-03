@@ -6,6 +6,7 @@ import cn.sixmillions.blog.entity.User;
 import cn.sixmillions.blog.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class UserController {
     private final UserConverter userConverter;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public R<List<User>> getUsers() {
         List<User> users = userService.list();
         return R.data(userConverter.removePassword(users));
